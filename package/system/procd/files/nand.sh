@@ -194,7 +194,7 @@ nand_upgrade_prepare_ubi() {
 
 nand_do_upgrade_success() {
 	local conf_tar="/tmp/sysupgrade.tgz"
-	
+
 	sync
 	[ -f "$conf_tar" ] && nand_restore_config "$conf_tar"
 	echo "sysupgrade successful"
@@ -231,7 +231,7 @@ nand_upgrade_ubifs() {
 	local rootfs_length=`(cat $1 | wc -c) 2> /dev/null`
 
 	nand_upgrade_prepare_ubi "$rootfs_length" "ubifs" "0" "0"
-	
+
 	local ubidev="$( nand_find_ubi "$CI_UBIPART" )"
 	local root_ubivol="$(nand_find_volume $ubidev rootfs)"
 	ubiupdatevol /dev/$root_ubivol -s $rootfs_length $1
@@ -333,7 +333,7 @@ nand_upgrade_stage1() {
 		[ "$SAVE_CONFIG" != 1 -a -f "$CONF_TAR" ] &&
 			rm $CONF_TAR
 
-		ubus call system nandupgrade "{\"path\": \"$path\" }"
+		ubus call system nandupgrade "{\"prefix\": \"$RAM_ROOT\", \"path\": \"$path\" }"
 		exit 0
 	}
 }
@@ -370,6 +370,7 @@ nand_do_platform_check() {
 # $(1): file to be used for upgrade
 nand_do_upgrade() {
 	echo -n $1 > /tmp/sysupgrade-nand-path
-	cp /sbin/upgraded /tmp/
+	install_bin /sbin/upgraded
+	ln -s "$RAM_ROOT"/sbin/upgraded /tmp/upgraded
 	nand_upgrade_stage1
 }
